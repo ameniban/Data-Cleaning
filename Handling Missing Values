@@ -1,0 +1,1482 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "5525ee9b",
+   "metadata": {
+    "papermill": {
+     "duration": 0.009122,
+     "end_time": "2022-10-03T14:25:54.907997",
+     "exception": false,
+     "start_time": "2022-10-03T14:25:54.898875",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**This notebook is an exercise in the [Data Cleaning](https://www.kaggle.com/learn/data-cleaning) course.  You can reference the tutorial at [this link](https://www.kaggle.com/alexisbcook/handling-missing-values).**\n",
+    "\n",
+    "---\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "76254d7a",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006475,
+     "end_time": "2022-10-03T14:25:54.921358",
+     "exception": false,
+     "start_time": "2022-10-03T14:25:54.914883",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "In this exercise, you'll apply what you learned in the **Handling missing values** tutorial.\n",
+    "\n",
+    "# Setup\n",
+    "\n",
+    "The questions below will give you feedback on your work. Run the following cell to set up the feedback system."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "be4969d8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:25:54.935912Z",
+     "iopub.status.busy": "2022-10-03T14:25:54.935163Z",
+     "iopub.status.idle": "2022-10-03T14:25:59.183785Z",
+     "shell.execute_reply": "2022-10-03T14:25:59.182257Z"
+    },
+    "papermill": {
+     "duration": 4.259668,
+     "end_time": "2022-10-03T14:25:59.187149",
+     "exception": false,
+     "start_time": "2022-10-03T14:25:54.927481",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:3: DtypeWarning: Columns (22,32) have mixed types.Specify dtype option on import or set low_memory=False.\n",
+      "  This is separate from the ipykernel package so we can avoid doing imports until\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Setup Complete\n"
+     ]
+    }
+   ],
+   "source": [
+    "from learntools.core import binder\n",
+    "binder.bind(globals())\n",
+    "from learntools.data_cleaning.ex1 import *\n",
+    "print(\"Setup Complete\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9234fd3a",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006054,
+     "end_time": "2022-10-03T14:25:59.200494",
+     "exception": false,
+     "start_time": "2022-10-03T14:25:59.194440",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# 1) Take a first look at the data\n",
+    "\n",
+    "Run the next code cell to load in the libraries and dataset you'll use to complete the exercise."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "bf88697c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:25:59.215489Z",
+     "iopub.status.busy": "2022-10-03T14:25:59.214467Z",
+     "iopub.status.idle": "2022-10-03T14:26:00.994947Z",
+     "shell.execute_reply": "2022-10-03T14:26:00.992804Z"
+    },
+    "papermill": {
+     "duration": 1.791071,
+     "end_time": "2022-10-03T14:26:00.997962",
+     "exception": false,
+     "start_time": "2022-10-03T14:25:59.206891",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3552: DtypeWarning: Columns (22,32) have mixed types.Specify dtype option on import or set low_memory=False.\n",
+      "  exec(code_obj, self.user_global_ns, self.user_ns)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# modules we'll use\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "\n",
+    "# read in all our data\n",
+    "sf_permits = pd.read_csv(\"../input/building-permit-applications-data/Building_Permits.csv\")\n",
+    "\n",
+    "# set seed for reproducibility\n",
+    "np.random.seed(0) "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "74738657",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006171,
+     "end_time": "2022-10-03T14:26:01.010585",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.004414",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Use the code cell below to print the first five rows of the `sf_permits` DataFrame."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "f2ff4b48",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.026253Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.025318Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.062937Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.061821Z"
+    },
+    "papermill": {
+     "duration": 0.048163,
+     "end_time": "2022-10-03T14:26:01.065344",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.017181",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Permit Number</th>\n",
+       "      <th>Permit Type</th>\n",
+       "      <th>Permit Type Definition</th>\n",
+       "      <th>Permit Creation Date</th>\n",
+       "      <th>Block</th>\n",
+       "      <th>Lot</th>\n",
+       "      <th>Street Number</th>\n",
+       "      <th>Street Number Suffix</th>\n",
+       "      <th>Street Name</th>\n",
+       "      <th>Street Suffix</th>\n",
+       "      <th>...</th>\n",
+       "      <th>Existing Construction Type</th>\n",
+       "      <th>Existing Construction Type Description</th>\n",
+       "      <th>Proposed Construction Type</th>\n",
+       "      <th>Proposed Construction Type Description</th>\n",
+       "      <th>Site Permit</th>\n",
+       "      <th>Supervisor District</th>\n",
+       "      <th>Neighborhoods - Analysis Boundaries</th>\n",
+       "      <th>Zipcode</th>\n",
+       "      <th>Location</th>\n",
+       "      <th>Record ID</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>201505065519</td>\n",
+       "      <td>4</td>\n",
+       "      <td>sign - erect</td>\n",
+       "      <td>05/06/2015</td>\n",
+       "      <td>0326</td>\n",
+       "      <td>023</td>\n",
+       "      <td>140</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Ellis</td>\n",
+       "      <td>St</td>\n",
+       "      <td>...</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>constr type 3</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>Tenderloin</td>\n",
+       "      <td>94102.0</td>\n",
+       "      <td>(37.785719256680785, -122.40852313194863)</td>\n",
+       "      <td>1380611233945</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>201604195146</td>\n",
+       "      <td>4</td>\n",
+       "      <td>sign - erect</td>\n",
+       "      <td>04/19/2016</td>\n",
+       "      <td>0306</td>\n",
+       "      <td>007</td>\n",
+       "      <td>440</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Geary</td>\n",
+       "      <td>St</td>\n",
+       "      <td>...</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>constr type 3</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>Tenderloin</td>\n",
+       "      <td>94102.0</td>\n",
+       "      <td>(37.78733980600732, -122.41063199757738)</td>\n",
+       "      <td>1420164406718</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>201605278609</td>\n",
+       "      <td>3</td>\n",
+       "      <td>additions alterations or repairs</td>\n",
+       "      <td>05/27/2016</td>\n",
+       "      <td>0595</td>\n",
+       "      <td>203</td>\n",
+       "      <td>1647</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Pacific</td>\n",
+       "      <td>Av</td>\n",
+       "      <td>...</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>constr type 1</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>constr type 1</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>Russian Hill</td>\n",
+       "      <td>94109.0</td>\n",
+       "      <td>(37.7946573324287, -122.42232562979227)</td>\n",
+       "      <td>1424856504716</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>201611072166</td>\n",
+       "      <td>8</td>\n",
+       "      <td>otc alterations permit</td>\n",
+       "      <td>11/07/2016</td>\n",
+       "      <td>0156</td>\n",
+       "      <td>011</td>\n",
+       "      <td>1230</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Pacific</td>\n",
+       "      <td>Av</td>\n",
+       "      <td>...</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>wood frame (5)</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>wood frame (5)</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>Nob Hill</td>\n",
+       "      <td>94109.0</td>\n",
+       "      <td>(37.79595867909168, -122.41557405519474)</td>\n",
+       "      <td>1443574295566</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>201611283529</td>\n",
+       "      <td>6</td>\n",
+       "      <td>demolitions</td>\n",
+       "      <td>11/28/2016</td>\n",
+       "      <td>0342</td>\n",
+       "      <td>001</td>\n",
+       "      <td>950</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Market</td>\n",
+       "      <td>St</td>\n",
+       "      <td>...</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>constr type 3</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>6.0</td>\n",
+       "      <td>Tenderloin</td>\n",
+       "      <td>94102.0</td>\n",
+       "      <td>(37.78315261897309, -122.40950883997789)</td>\n",
+       "      <td>144548169992</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 43 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "  Permit Number  Permit Type            Permit Type Definition  \\\n",
+       "0  201505065519            4                      sign - erect   \n",
+       "1  201604195146            4                      sign - erect   \n",
+       "2  201605278609            3  additions alterations or repairs   \n",
+       "3  201611072166            8            otc alterations permit   \n",
+       "4  201611283529            6                       demolitions   \n",
+       "\n",
+       "  Permit Creation Date Block  Lot  Street Number Street Number Suffix  \\\n",
+       "0           05/06/2015  0326  023            140                  NaN   \n",
+       "1           04/19/2016  0306  007            440                  NaN   \n",
+       "2           05/27/2016  0595  203           1647                  NaN   \n",
+       "3           11/07/2016  0156  011           1230                  NaN   \n",
+       "4           11/28/2016  0342  001            950                  NaN   \n",
+       "\n",
+       "  Street Name Street Suffix  ...  Existing Construction Type  \\\n",
+       "0       Ellis            St  ...                         3.0   \n",
+       "1       Geary            St  ...                         3.0   \n",
+       "2     Pacific            Av  ...                         1.0   \n",
+       "3     Pacific            Av  ...                         5.0   \n",
+       "4      Market            St  ...                         3.0   \n",
+       "\n",
+       "  Existing Construction Type Description Proposed Construction Type  \\\n",
+       "0                          constr type 3                        NaN   \n",
+       "1                          constr type 3                        NaN   \n",
+       "2                          constr type 1                        1.0   \n",
+       "3                         wood frame (5)                        5.0   \n",
+       "4                          constr type 3                        NaN   \n",
+       "\n",
+       "  Proposed Construction Type Description Site Permit Supervisor District  \\\n",
+       "0                                    NaN         NaN                 3.0   \n",
+       "1                                    NaN         NaN                 3.0   \n",
+       "2                          constr type 1         NaN                 3.0   \n",
+       "3                         wood frame (5)         NaN                 3.0   \n",
+       "4                                    NaN         NaN                 6.0   \n",
+       "\n",
+       "  Neighborhoods - Analysis Boundaries  Zipcode  \\\n",
+       "0                          Tenderloin  94102.0   \n",
+       "1                          Tenderloin  94102.0   \n",
+       "2                        Russian Hill  94109.0   \n",
+       "3                            Nob Hill  94109.0   \n",
+       "4                          Tenderloin  94102.0   \n",
+       "\n",
+       "                                    Location      Record ID  \n",
+       "0  (37.785719256680785, -122.40852313194863)  1380611233945  \n",
+       "1   (37.78733980600732, -122.41063199757738)  1420164406718  \n",
+       "2    (37.7946573324287, -122.42232562979227)  1424856504716  \n",
+       "3   (37.79595867909168, -122.41557405519474)  1443574295566  \n",
+       "4   (37.78315261897309, -122.40950883997789)   144548169992  \n",
+       "\n",
+       "[5 rows x 43 columns]"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "sf_permits.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "96038eac",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006421,
+     "end_time": "2022-10-03T14:26:01.078645",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.072224",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Does the dataset have any missing values?  Once you have an answer, run the code cell below to get credit for your work."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "b23e2a44",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.093526Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.093119Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.101904Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.100834Z"
+    },
+    "papermill": {
+     "duration": 0.018999,
+     "end_time": "2022-10-03T14:26:01.104181",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.085182",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 0.16666666666666666, \"interactionType\": 1, \"questionType\": 4, \"questionId\": \"1_TakeFirstLook\", \"learnToolsVersion\": \"0.3.4\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct:</span> \n",
+       "\n",
+       "The first five rows of the data does show that several columns have missing values.  You can see this in the \"Street Number Suffix\", \"Proposed Construction Type\" and \"Site Permit\" columns, among others."
+      ],
+      "text/plain": [
+       "Correct: \n",
+       "\n",
+       "The first five rows of the data does show that several columns have missing values.  You can see this in the \"Street Number Suffix\", \"Proposed Construction Type\" and \"Site Permit\" columns, among others."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Check your answer (Run this code cell to receive credit!)\n",
+    "q1.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "04a80fb9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.120368Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.119935Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.128942Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.127716Z"
+    },
+    "papermill": {
+     "duration": 0.020041,
+     "end_time": "2022-10-03T14:26:01.131470",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.111429",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 2, \"questionType\": 4, \"questionId\": \"1_TakeFirstLook\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#3366cc\">Hint:</span> Use `sf_permits.head()` to view the first five rows of the data."
+      ],
+      "text/plain": [
+       "Hint: Use `sf_permits.head()` to view the first five rows of the data."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Line below will give you a hint\n",
+    "q1.hint()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2267fe28",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006935,
+     "end_time": "2022-10-03T14:26:01.145705",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.138770",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# 2) How many missing data points do we have?\n",
+    "\n",
+    "What percentage of the values in the dataset are missing?  Your answer should be a number between 0 and 100.  (If 1/4 of the values in the dataset are missing, the answer is 25.)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "b483e4fa",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.163391Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.162787Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.405728Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.404335Z"
+    },
+    "papermill": {
+     "duration": 0.254068,
+     "end_time": "2022-10-03T14:26:01.408027",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.153959",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "26.26002315058403\n"
+     ]
+    },
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 0.16666666666666666, \"interactionType\": 1, \"questionType\": 1, \"questionId\": \"2_PercentMissingValues\", \"learnToolsVersion\": \"0.3.4\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# get the number of missing data points per column\n",
+    "missing_values_count = sf_permits.isnull().sum()\n",
+    "\n",
+    "# look at the # of missing points in the first ten columns\n",
+    "missing_values_count[0:10]\n",
+    "\n",
+    "# how many total missing values do we have?\n",
+    "total_cells = np.product(sf_permits.shape)\n",
+    "total_missing = missing_values_count.sum()\n",
+    "\n",
+    "# percent of data that is missing\n",
+    "percent_missing = (total_missing/total_cells) * 100\n",
+    "print(percent_missing)\n",
+    "\n",
+    "# Check your answer\n",
+    "q2.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "f0731dff",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.425060Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.424676Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.438262Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.437157Z"
+    },
+    "papermill": {
+     "duration": 0.02507,
+     "end_time": "2022-10-03T14:26:01.440656",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.415586",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 2, \"questionType\": 1, \"questionId\": \"2_PercentMissingValues\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#3366cc\">Hint:</span> You can begin by getting the number of missing entries in each column with `missing_values_count = sf_permits.isnull().sum()`."
+      ],
+      "text/plain": [
+       "Hint: You can begin by getting the number of missing entries in each column with `missing_values_count = sf_permits.isnull().sum()`."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 3, \"questionType\": 1, \"questionId\": \"2_PercentMissingValues\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc99\">Solution:</span> \n",
+       "```python\n",
+       "# get the number of missing data points per column\n",
+       "missing_values_count = sf_permits.isnull().sum()\n",
+       "\n",
+       "# how many total missing values do we have?\n",
+       "total_cells = np.product(sf_permits.shape)\n",
+       "total_missing = missing_values_count.sum()\n",
+       "\n",
+       "# percent of data that is missing\n",
+       "percent_missing = (total_missing/total_cells) * 100\n",
+       "\n",
+       "```"
+      ],
+      "text/plain": [
+       "Solution: \n",
+       "```python\n",
+       "# get the number of missing data points per column\n",
+       "missing_values_count = sf_permits.isnull().sum()\n",
+       "\n",
+       "# how many total missing values do we have?\n",
+       "total_cells = np.product(sf_permits.shape)\n",
+       "total_missing = missing_values_count.sum()\n",
+       "\n",
+       "# percent of data that is missing\n",
+       "percent_missing = (total_missing/total_cells) * 100\n",
+       "\n",
+       "```"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "q2.hint()\n",
+    "q2.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "eb2cc4e4",
+   "metadata": {
+    "papermill": {
+     "duration": 0.007783,
+     "end_time": "2022-10-03T14:26:01.457141",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.449358",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# 3) Figure out why the data is missing\n",
+    "\n",
+    "Look at the columns **\"Street Number Suffix\"** and **\"Zipcode\"** from the [San Francisco Building Permits dataset](https://www.kaggle.com/aparnashastry/building-permit-applications-data). Both of these contain missing values. \n",
+    "- Which, if either, are missing because they don't exist? \n",
+    "- Which, if either, are missing because they weren't recorded?  \n",
+    "\n",
+    "Once you have an answer, run the code cell below."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "0e3d9c68",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.475369Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.474978Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.484151Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.483027Z"
+    },
+    "papermill": {
+     "duration": 0.02122,
+     "end_time": "2022-10-03T14:26:01.486519",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.465299",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 0.16666666666666666, \"interactionType\": 1, \"questionType\": 4, \"questionId\": \"3_WhyDataMissing\", \"learnToolsVersion\": \"0.3.4\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct:</span> \n",
+       "\n",
+       "If a value in the \"Street Number Suffix\" column is missing, it is likely because it does not exist. If a value in the \"Zipcode\" column is missing, it was not recorded."
+      ],
+      "text/plain": [
+       "Correct: \n",
+       "\n",
+       "If a value in the \"Street Number Suffix\" column is missing, it is likely because it does not exist. If a value in the \"Zipcode\" column is missing, it was not recorded."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Check your answer (Run this code cell to receive credit!)\n",
+    "q3.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "6e30b4de",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.505565Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.505160Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.514739Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.513544Z"
+    },
+    "papermill": {
+     "duration": 0.022022,
+     "end_time": "2022-10-03T14:26:01.517176",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.495154",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 2, \"questionType\": 4, \"questionId\": \"3_WhyDataMissing\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#3366cc\">Hint:</span> Do all addresses generally have a street number suffix?  Do all addresses generally have a zipcode?"
+      ],
+      "text/plain": [
+       "Hint: Do all addresses generally have a street number suffix?  Do all addresses generally have a zipcode?"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Line below will give you a hint\n",
+    "q3.hint()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0ff63786",
+   "metadata": {
+    "papermill": {
+     "duration": 0.008158,
+     "end_time": "2022-10-03T14:26:01.533993",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.525835",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# 4) Drop missing values: rows\n",
+    "\n",
+    "If you removed all of the rows of `sf_permits` with missing values, how many rows are left?\n",
+    "\n",
+    "**Note**: Do not change the value of `sf_permits` when checking this.  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "e9bef2e6",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.552660Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.552249Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.803136Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.801920Z"
+    },
+    "papermill": {
+     "duration": 0.263431,
+     "end_time": "2022-10-03T14:26:01.805880",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.542449",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Permit Number</th>\n",
+       "      <th>Permit Type</th>\n",
+       "      <th>Permit Type Definition</th>\n",
+       "      <th>Permit Creation Date</th>\n",
+       "      <th>Block</th>\n",
+       "      <th>Lot</th>\n",
+       "      <th>Street Number</th>\n",
+       "      <th>Street Number Suffix</th>\n",
+       "      <th>Street Name</th>\n",
+       "      <th>Street Suffix</th>\n",
+       "      <th>...</th>\n",
+       "      <th>Existing Construction Type</th>\n",
+       "      <th>Existing Construction Type Description</th>\n",
+       "      <th>Proposed Construction Type</th>\n",
+       "      <th>Proposed Construction Type Description</th>\n",
+       "      <th>Site Permit</th>\n",
+       "      <th>Supervisor District</th>\n",
+       "      <th>Neighborhoods - Analysis Boundaries</th>\n",
+       "      <th>Zipcode</th>\n",
+       "      <th>Location</th>\n",
+       "      <th>Record ID</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>0 rows × 43 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "Empty DataFrame\n",
+       "Columns: [Permit Number, Permit Type, Permit Type Definition, Permit Creation Date, Block, Lot, Street Number, Street Number Suffix, Street Name, Street Suffix, Unit, Unit Suffix, Description, Current Status, Current Status Date, Filed Date, Issued Date, Completed Date, First Construction Document Date, Structural Notification, Number of Existing Stories, Number of Proposed Stories, Voluntary Soft-Story Retrofit, Fire Only Permit, Permit Expiration Date, Estimated Cost, Revised Cost, Existing Use, Existing Units, Proposed Use, Proposed Units, Plansets, TIDF Compliance, Existing Construction Type, Existing Construction Type Description, Proposed Construction Type, Proposed Construction Type Description, Site Permit, Supervisor District, Neighborhoods - Analysis Boundaries, Zipcode, Location, Record ID]\n",
+       "Index: []\n",
+       "\n",
+       "[0 rows x 43 columns]"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "sf_permits.dropna()\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "53da101f",
+   "metadata": {
+    "papermill": {
+     "duration": 0.008625,
+     "end_time": "2022-10-03T14:26:01.823336",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.814711",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Once you have an answer, run the code cell below."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "bbe459ce",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.842617Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.842206Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.851757Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.850658Z"
+    },
+    "papermill": {
+     "duration": 0.021956,
+     "end_time": "2022-10-03T14:26:01.854148",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.832192",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 0.16666666666666666, \"interactionType\": 1, \"questionType\": 4, \"questionId\": \"4_DropMissingRows\", \"learnToolsVersion\": \"0.3.4\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct:</span> \n",
+       "\n",
+       "There are no rows remaining in the dataset!"
+      ],
+      "text/plain": [
+       "Correct: \n",
+       "\n",
+       "There are no rows remaining in the dataset!"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Check your answer (Run this code cell to receive credit!)\n",
+    "q4.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "06660d48",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.874229Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.873844Z",
+     "iopub.status.idle": "2022-10-03T14:26:01.881600Z",
+     "shell.execute_reply": "2022-10-03T14:26:01.880675Z"
+    },
+    "papermill": {
+     "duration": 0.020843,
+     "end_time": "2022-10-03T14:26:01.883948",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.863105",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 2, \"questionType\": 4, \"questionId\": \"4_DropMissingRows\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#3366cc\">Hint:</span> Use `sf_permits.dropna()` to drop all missing rows."
+      ],
+      "text/plain": [
+       "Hint: Use `sf_permits.dropna()` to drop all missing rows."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Line below will give you a hint\n",
+    "q4.hint()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4d0c6109",
+   "metadata": {
+    "papermill": {
+     "duration": 0.009327,
+     "end_time": "2022-10-03T14:26:01.902503",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.893176",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# 5) Drop missing values: columns\n",
+    "\n",
+    "Now try removing all the columns with empty values.  \n",
+    "- Create a new DataFrame called `sf_permits_with_na_dropped` that has all of the columns with empty values removed.  \n",
+    "- How many columns were removed from the original `sf_permits` DataFrame? Use this number to set the value of the `dropped_columns` variable below."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "1350cda4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:01.922774Z",
+     "iopub.status.busy": "2022-10-03T14:26:01.922322Z",
+     "iopub.status.idle": "2022-10-03T14:26:02.187853Z",
+     "shell.execute_reply": "2022-10-03T14:26:02.186700Z"
+    },
+    "papermill": {
+     "duration": 0.278518,
+     "end_time": "2022-10-03T14:26:02.190396",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:01.911878",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 0.16666666666666666, \"interactionType\": 1, \"questionType\": 1, \"questionId\": \"5_DropMissingCols\", \"learnToolsVersion\": \"0.3.4\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "\n",
+    "sf_permits_with_na_dropped = sf_permits.dropna(axis=1)\n",
+    "cols_in_original_dataset = sf_permits.shape[1]\n",
+    "cols_in_na_dropped = sf_permits_with_na_dropped.shape[1]\n",
+    "dropped_columns = cols_in_original_dataset - cols_in_na_dropped\n",
+    "# Check your answer\n",
+    "q5.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "3e73b094",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:02.210987Z",
+     "iopub.status.busy": "2022-10-03T14:26:02.210568Z",
+     "iopub.status.idle": "2022-10-03T14:26:02.223583Z",
+     "shell.execute_reply": "2022-10-03T14:26:02.222508Z"
+    },
+    "papermill": {
+     "duration": 0.026044,
+     "end_time": "2022-10-03T14:26:02.225982",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:02.199938",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 2, \"questionType\": 1, \"questionId\": \"5_DropMissingCols\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#3366cc\">Hint:</span> You can begin by getting the dropping all columns with missing values with `sf_permits.dropna(axis=1)`."
+      ],
+      "text/plain": [
+       "Hint: You can begin by getting the dropping all columns with missing values with `sf_permits.dropna(axis=1)`."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 3, \"questionType\": 1, \"questionId\": \"5_DropMissingCols\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc99\">Solution:</span> \n",
+       "```python\n",
+       "# remove all columns with at least one missing value\n",
+       "sf_permits_with_na_dropped = sf_permits.dropna(axis=1)\n",
+       "\n",
+       "# calculate number of dropped columns\n",
+       "cols_in_original_dataset = sf_permits.shape[1]\n",
+       "cols_in_na_dropped = sf_permits_with_na_dropped.shape[1]\n",
+       "dropped_columns = cols_in_original_dataset - cols_in_na_dropped\n",
+       "\n",
+       "```"
+      ],
+      "text/plain": [
+       "Solution: \n",
+       "```python\n",
+       "# remove all columns with at least one missing value\n",
+       "sf_permits_with_na_dropped = sf_permits.dropna(axis=1)\n",
+       "\n",
+       "# calculate number of dropped columns\n",
+       "cols_in_original_dataset = sf_permits.shape[1]\n",
+       "cols_in_na_dropped = sf_permits_with_na_dropped.shape[1]\n",
+       "dropped_columns = cols_in_original_dataset - cols_in_na_dropped\n",
+       "\n",
+       "```"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "q5.hint()\n",
+    "q5.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "442bf6cd",
+   "metadata": {
+    "papermill": {
+     "duration": 0.009537,
+     "end_time": "2022-10-03T14:26:02.245496",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:02.235959",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# 6) Fill in missing values automatically\n",
+    "\n",
+    "Try replacing all the NaN's in the `sf_permits` data with the one that comes directly after it and then replacing any remaining NaN's with 0.  Set the result to a new DataFrame `sf_permits_with_na_imputed`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "aefe1fb6",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:02.267371Z",
+     "iopub.status.busy": "2022-10-03T14:26:02.266559Z",
+     "iopub.status.idle": "2022-10-03T14:26:03.229787Z",
+     "shell.execute_reply": "2022-10-03T14:26:03.228699Z"
+    },
+    "papermill": {
+     "duration": 0.976913,
+     "end_time": "2022-10-03T14:26:03.232389",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:02.255476",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 0.16666666666666666, \"interactionType\": 1, \"questionType\": 1, \"questionId\": \"6_ImputeAutomatically\", \"learnToolsVersion\": \"0.3.4\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# TODO: Your code here\n",
+    "sf_permits_with_na_imputed =sf_permits.fillna(method='bfill', axis=0).fillna(0)\n",
+    "# Check your answer\n",
+    "q6.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "f2f4d4ed",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-03T14:26:03.254484Z",
+     "iopub.status.busy": "2022-10-03T14:26:03.254110Z",
+     "iopub.status.idle": "2022-10-03T14:26:03.267960Z",
+     "shell.execute_reply": "2022-10-03T14:26:03.266683Z"
+    },
+    "papermill": {
+     "duration": 0.027716,
+     "end_time": "2022-10-03T14:26:03.270373",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:03.242657",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 2, \"questionType\": 1, \"questionId\": \"6_ImputeAutomatically\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#3366cc\">Hint:</span> Use the `.fillna()` method twice."
+      ],
+      "text/plain": [
+       "Hint: Use the `.fillna()` method twice."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 3, \"questionType\": 1, \"questionId\": \"6_ImputeAutomatically\", \"learnToolsVersion\": \"0.3.4\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc99\">Solution:</span> \n",
+       "```python\n",
+       "sf_permits_with_na_imputed = sf_permits.fillna(method='bfill', axis=0).fillna(0)\n",
+       "\n",
+       "```"
+      ],
+      "text/plain": [
+       "Solution: \n",
+       "```python\n",
+       "sf_permits_with_na_imputed = sf_permits.fillna(method='bfill', axis=0).fillna(0)\n",
+       "\n",
+       "```"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "q6.hint()\n",
+    "q6.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4385f73b",
+   "metadata": {
+    "papermill": {
+     "duration": 0.010253,
+     "end_time": "2022-10-03T14:26:03.291454",
+     "exception": false,
+     "start_time": "2022-10-03T14:26:03.281201",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# More practice\n",
+    "\n",
+    "If you're looking for more practice handling missing values:\n",
+    "\n",
+    "* Check out [this noteboook](https://www.kaggle.com/alexisbcook/missing-values) on handling missing values using scikit-learn's imputer. \n",
+    "* Look back at the \"Zipcode\" column in the `sf_permits` dataset, which has some missing values. How would you go about figuring out what the actual zipcode of each address should be? (You might try using another dataset. You can search for datasets about San Fransisco on the [Datasets listing](https://www.kaggle.com/datasets).) \n",
+    "\n",
+    "# Keep going\n",
+    "\n",
+    "In the next lesson, learn how to [**apply scaling and normalization**](https://www.kaggle.com/alexisbcook/scaling-and-normalization) to transform your data."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.12"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 18.228856,
+   "end_time": "2022-10-03T14:26:04.124101",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2022-10-03T14:25:45.895245",
+   "version": "2.3.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
